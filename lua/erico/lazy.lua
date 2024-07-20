@@ -157,6 +157,10 @@ require("lazy").setup({
 	  name = "my-notes",
 	  path = "~/vaults/my-vault",
 	},
+	{
+	  name = "work",
+	  path = "~/vaults/work",
+	},
       },
 
       -- see below for full list of options 👇
