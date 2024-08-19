@@ -44,6 +44,54 @@ vim.keymap.set("n", "<leader><leader>", function()
     vim.cmd("so")
 end)
 
+vim.keymap.set("n", "<leader>log", function()
+  local line = vim.api.nvim_win_get_cursor(0)
+  print(line);
+  local lineV = vim.api.nvim_get_current_line()
+  vim.api.nvim_buf_set_lines(0, line[1]-1, line[1], true, {"console.log(\""..lineV.."\", "..lineV..");"})
+end)
+vim.keymap.set("n", "<leader>aar", function()
+
+  local key = vim.fn.input("Around with what? ")
+  local cases = {
+    ['{'] = function ()
+      vim.api.nvim_feedkeys('b', 'xt', true)
+      vim.api.nvim_put({"{"},"c",false,true)
+      vim.api.nvim_feedkeys('e', 'xt', true)
+      vim.api.nvim_put({"}"},"c",true,true)
+    end,
+    ['('] = function ()
+      vim.api.nvim_feedkeys('b', 'xt', true)
+      vim.api.nvim_put({"("},"c",false,true)
+      vim.api.nvim_feedkeys('e', 'xt', true)
+      vim.api.nvim_put({")"},"c",true,true)
+    end,
+    ['['] = function ()
+      vim.api.nvim_feedkeys('b', 'xt', true)
+      vim.api.nvim_put({"["},"c",false,true)
+      vim.api.nvim_feedkeys('e', 'xt', true)
+      vim.api.nvim_put({"]"},"c",true,true)
+    end,
+    ["'"] = function ()
+      vim.api.nvim_feedkeys('b', 'xt', true)
+      vim.api.nvim_put({"'"},"c",false,true)
+      vim.api.nvim_feedkeys('e', 'xt', true)
+      vim.api.nvim_put({"'"},"c",true,true)
+    end,
+    ['"'] = function ()
+      vim.api.nvim_feedkeys('b', 'xt', true)
+      vim.api.nvim_put({"\""},"c",false,true)
+      vim.api.nvim_feedkeys('e', 'xt', true)
+      vim.api.nvim_put({"\""},"c",true,true)
+    end,
+  }
+  if cases[key] then
+    cases[key]()
+  else
+    print "This key does not exist"
+  end
+end)
+
 -- [[ Basic Keymaps ]]
 
 -- Keymaps for better default experience
