@@ -50,43 +50,36 @@ vim.keymap.set("n", "<leader>log", function()
   local lineV = vim.api.nvim_get_current_line()
   vim.api.nvim_buf_set_lines(0, line[1]-1, line[1], true, {"console.log(\""..lineV.."\", "..lineV..");"})
 end)
-vim.keymap.set("n", "<leader>aar", function()
 
+vim.keymap.set({"n","v"}, "<leader>aar", function()
+  local mode = vim.api.nvim_get_mode() -- n = normal,v - visual
+  if(mode["mode"] == "n") then
+    vim.api.nvim_feedkeys("viw", "xt", false)
+  end
+  local position = vim.fn.getpos("v")
+  local colEnd = vim.fn.col(".")
   local key = vim.fn.input("Around with what? ")
+  local txt = vim.api.nvim_buf_get_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {})
   local cases = {
     ['{'] = function ()
-      vim.api.nvim_feedkeys('b', 'xt', true)
-      vim.api.nvim_put({"{"},"c",false,true)
-      vim.api.nvim_feedkeys('e', 'xt', true)
-      vim.api.nvim_put({"}"},"c",true,true)
+      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"{"..txt[1].."}"})
     end,
     ['('] = function ()
-      vim.api.nvim_feedkeys('b', 'xt', true)
-      vim.api.nvim_put({"("},"c",false,true)
-      vim.api.nvim_feedkeys('e', 'xt', true)
-      vim.api.nvim_put({")"},"c",true,true)
+      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"("..txt[1]..")"})
     end,
     ['['] = function ()
-      vim.api.nvim_feedkeys('b', 'xt', true)
-      vim.api.nvim_put({"["},"c",false,true)
-      vim.api.nvim_feedkeys('e', 'xt', true)
-      vim.api.nvim_put({"]"},"c",true,true)
+      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"["..txt[1].."]"})
     end,
     ["'"] = function ()
-      vim.api.nvim_feedkeys('b', 'xt', true)
-      vim.api.nvim_put({"'"},"c",false,true)
-      vim.api.nvim_feedkeys('e', 'xt', true)
-      vim.api.nvim_put({"'"},"c",true,true)
+      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"'"..txt[1].."'"})
     end,
     ['"'] = function ()
-      vim.api.nvim_feedkeys('b', 'xt', true)
-      vim.api.nvim_put({"\""},"c",false,true)
-      vim.api.nvim_feedkeys('e', 'xt', true)
-      vim.api.nvim_put({"\""},"c",true,true)
+      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"\""..txt[1].."\""})
     end,
   }
   if cases[key] then
     cases[key]()
+    vim.api.nvim_input("<Esc>")
   else
     print "This key does not exist"
   end
