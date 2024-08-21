@@ -57,3 +57,11 @@ vim.opt.completeopt = {'menuone','noselect'}
 vim.opt.termguicolors = true
 
 vim.opt.conceallevel = 1
+
+vim.api.nvim_create_autocmd(
+  {"BufRead","BufNewFile"},
+  {
+    pattern = "*.cds",
+    command = 'set filetype=cds'
+  }
+)

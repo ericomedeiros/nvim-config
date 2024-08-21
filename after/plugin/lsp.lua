@@ -6,12 +6,30 @@ lsp.ensure_installed({
   'tsserver',
   'eslint',
   'html',
+  'lua_ls',
 })
 
+local lsp_configurations = require('lspconfig.configs')
+
+if not lsp_configurations.cds_lsp then
+  lsp_configurations.cds_lsp = {
+    default_config = {
+      name = 'cds_lsp',
+      cmd = {
+        "node",
+        '/Users/i505805/apps/node_modules/.bin/cds-lsp',
+          '--stdio'
+      },
+      filetypes = {'cds'},
+      root_dir = require('lspconfig.util').root_pattern('package.json', '.git') or vim.loop.os_homedir()
+      -- root_dir = "${HOME}/apps/node_modules/.bin/cds-lsp",
+    }
+  }
+end
 -- Fix Undefined global 'vim'
 lsp.nvim_workspace()
 
-lsp.on_attach(function(_, bufnr)
+lsp.on_attach(function(client, bufnr)
    -- NOTE: Remember that lua is a real programming language, and as such it is possible
   -- to define small helper and utility functions so you don't have to repeat yourself
   -- many times.
@@ -66,6 +84,11 @@ lsp.on_attach(function(_, bufnr)
   vim.api.nvim_buf_create_user_command(bufnr, 'Format', function(_)
     vim.lsp.buf.format()
   end, { desc = 'Format current buffer with LSP' })
+
+  -- in case of cds_lsp it does not support go to declaration
+  if client.supports_method('textDocument/declaration') then
+    vim.cmd('autocmd CursorHold <buffer> lua vim.lsp.buf.definition()')
+  end
 
 end)
 
