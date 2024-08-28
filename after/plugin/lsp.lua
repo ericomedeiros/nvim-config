@@ -18,7 +18,7 @@ if not lsp_configurations.cds_lsp then
       cmd = {
         "node",
         '/Users/i505805/apps/node_modules/.bin/cds-lsp',
-          '--stdio'
+        '--stdio'
       },
       filetypes = {'cds'},
       root_dir = require('lspconfig.util').root_pattern('package.json', '.git') or vim.loop.os_homedir()
@@ -26,6 +26,12 @@ if not lsp_configurations.cds_lsp then
     }
   }
 end
+
+require('lspconfig').cds_lsp.setup({
+  on_attach=function (client, bufnr)
+    vim.keymap.set('n', 'gd', client.definition(), { buffer = bufnr, desc = '', remap = false })
+  end
+})
 -- Fix Undefined global 'vim'
 lsp.nvim_workspace()
 
@@ -89,7 +95,6 @@ lsp.on_attach(function(client, bufnr)
   if client.supports_method('textDocument/declaration') then
     vim.cmd('autocmd CursorHold <buffer> lua vim.lsp.buf.definition()')
   end
-
 end)
 
 lsp.setup()
