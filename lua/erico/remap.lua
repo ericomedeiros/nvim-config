@@ -44,7 +44,7 @@ vim.keymap.set("n", "<leader><leader>", function()
     vim.cmd("so")
 end)
 
-vim.keymap.set("n", "<leader>log", function()
+vim.keymap.set({"n", "v"}, "<leader>log", function()
   local line = vim.api.nvim_win_get_cursor(0)
   print(line);
   local lineV = vim.api.nvim_get_current_line()
@@ -75,6 +75,12 @@ vim.keymap.set({"n","v"}, "<leader>aar", function()
     end,
     ['"'] = function ()
       vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"\""..txt[1].."\""})
+    end,
+    ['´'] = function ()
+      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"´"..txt[1].."´"})
+    end,
+    ['`'] = function ()
+      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"`"..txt[1].."`"})
     end,
   }
   if cases[key] then
