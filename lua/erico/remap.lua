@@ -57,30 +57,37 @@ vim.keymap.set({"n","v"}, "<leader>aar", function()
     vim.api.nvim_feedkeys("viw", "xt", false)
   end
   local position = vim.fn.getpos("v")
+  local rowStart = position[2] - 1
+  local rowEnd = rowStart
   local colEnd = vim.fn.col(".")
+  local colStart = position[3]-1;
+  if position[3] > colEnd then
+    colStart = colEnd-1
+    colEnd = position[3]
+  end
   local key = vim.fn.input("Around with what? ")
-  local txt = vim.api.nvim_buf_get_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {})
+  local txt = vim.api.nvim_buf_get_text(position[1], rowStart, colStart, rowEnd, colEnd, {})
   local cases = {
     ['{'] = function ()
-      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"{"..txt[1].."}"})
+      vim.api.nvim_buf_set_text(position[1], rowStart, colStart, rowEnd, colEnd, {"{"..txt[1].."}"})
     end,
     ['('] = function ()
-      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"("..txt[1]..")"})
+      vim.api.nvim_buf_set_text(position[1], rowStart, colStart, rowEnd, colEnd, {"("..txt[1]..")"})
     end,
     ['['] = function ()
-      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"["..txt[1].."]"})
+      vim.api.nvim_buf_set_text(position[1], rowStart, colStart, rowEnd, colEnd, {"["..txt[1].."]"})
     end,
     ["'"] = function ()
-      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"'"..txt[1].."'"})
+      vim.api.nvim_buf_set_text(position[1], rowStart, colStart, rowEnd, colEnd, {"'"..txt[1].."'"})
     end,
     ['"'] = function ()
-      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"\""..txt[1].."\""})
+      vim.api.nvim_buf_set_text(position[1], rowStart, colStart, rowEnd, colEnd, {"\""..txt[1].."\""})
     end,
     ['´'] = function ()
-      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"´"..txt[1].."´"})
+      vim.api.nvim_buf_set_text(position[1], rowStart, colStart, rowEnd, colEnd, {"´"..txt[1].."´"})
     end,
     ['`'] = function ()
-      vim.api.nvim_buf_set_text(position[1], position[2]-1, position[3]-1, position[2]-1, colEnd, {"`"..txt[1].."`"})
+      vim.api.nvim_buf_set_text(position[1], rowStart, colStart, rowEnd, colEnd, {"`"..txt[1].."`"})
     end,
   }
   if cases[key] then
