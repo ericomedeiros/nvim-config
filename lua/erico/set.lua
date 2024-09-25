@@ -38,11 +38,6 @@ vim.opt.colorcolumn = "120"
 -- Enable mouse mode
 vim.opt.mouse = 'a'
 
--- Sync clipboard between OS and Neovim.
---  Remove this option if you want your OS clipboard to remain independent.
---  See `:help 'clipboard'`
-vim.opt.clipboard = 'unnamedplus'
-
 -- Enable break indent
 vim.opt.breakindent = true
 
