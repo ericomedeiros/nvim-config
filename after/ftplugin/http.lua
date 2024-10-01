@@ -1,31 +1,28 @@
-local line_count = vim.api.nvim_buf_line_count(0) -- Get the total number of lines
+local line_count = vim.api.nvim_buf_line_count(0) -- Get total lines
 vim.api.nvim_win_set_cursor(0, {line_count, 0})
 local lastVariableLineMatch = vim.fn.search('^@','cnb')
 vim.api.nvim_win_set_cursor(0,{1,0})
 -- Get the current buffer's lines
 local lines = vim.api.nvim_buf_get_lines(0, 0, lastVariableLineMatch, false)
-local matching_lines = {}
+local fileVariables = {}
 
 -- Iterate through each line and match against the pattern
 for _, line in ipairs(lines) do
-  if line:match('^@') then
-    -- table.insert(matching_lines, line)
-      vim.print(line)
-    for w in line:gmatch("^@(%w+)=(%w+)") do
-      vim.print(w)
-    end
-  end
+  local variableName = line:match("@(.+)=")
+  local variableValue = line:match("=(.+)$")
+  fileVariables[variableName] = variableValue
 end
 
 local function processVariable(line)
   assert(type(line) == "string", "the line should be a string")
-  for w in line:gmatch("{{(%w+)}}") do
+  for w in line:gmatch("{{(.+)}}") do
     vim.print(w)
+    line = line:gsub("{{"..w.."}}",fileVariables[w])
   end
-  
+  vim.print(line)
+  return line
 end
 
-vim.print(matching_lines)
 vim.keymap.set({'n','v'}, '<leader>mr', function ()
   local curlCmd = "curl -X "
   curlCmd = curlCmd .. vim.api.nvim_get_current_line()
@@ -66,8 +63,4 @@ vim.keymap.set({'n','v'}, '<leader>mr', function ()
       vim.api.nvim_buf_set_lines(responseBuf, 0, -1, false, lines)
     end
   })
-  -- local handle = io.popen(curlCmd)
-  -- local result = handle:read("*a") -- Reads all output
-  -- handle:close()
-  -- vim.api.nvim_put(curlResult,"l",true,true)
 end, {desc = '[M]ake [R]equest'})
