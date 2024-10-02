@@ -19,48 +19,71 @@ local function processVariable(line)
     vim.print(w)
     line = line:gsub("{{"..w.."}}",fileVariables[w])
   end
-  vim.print(line)
   return line
+end
+
+local function whenJobEventStdout(channID, data, eventName)
+  local curlResult = data[1]:gsub("\r", "")
+  local responseBuf = vim.api.nvim_create_buf(true,false)
+  vim.api.nvim_buf_set_option(responseBuf, "filetype", "json")
+  local lines = {}
+  for line in curlResult:gmatch("([^\n]*)\n?") do
+    table.insert(lines, line)
+  end
+  vim.cmd("vsplit")
+  vim.api.nvim_win_set_buf(0,responseBuf)
+  vim.api.nvim_buf_set_lines(responseBuf, 0, -1, false, lines)
+end
+
+local function whenJobEventStderr(channID, data, eventName)
+  local responseBuf = vim.api.nvim_create_buf(true,false)
+  vim.cmd("vsplit")
+  vim.api.nvim_win_set_buf(0,responseBuf)
+  vim.api.nvim_buf_set_lines(responseBuf, 0, -1, false, data)
+end
+
+local function processJobEvents(channID, data, eventName)
+  if data[1]:match("%S") == nil then
+    vim.print("I'm out")
+    return
+  elseif eventName == "stdout" then
+    whenJobEventStdout(channID, data, eventName)
+  elseif eventName == "stderr" then
+    whenJobEventStderr(channID, data, eventName)
+  end
 end
 
 vim.keymap.set({'n','v'}, '<leader>mr', function ()
   local curlCmd = "curl -X "
-  curlCmd = curlCmd .. vim.api.nvim_get_current_line()
-  processVariable(vim.api.nvim_get_current_line())
+  curlCmd = curlCmd .. processVariable(vim.api.nvim_get_current_line())
   curlCmd = curlCmd:gsub("?", "\\?") -- avoid shell not getting ?
   local requestEndLine = vim.fn.search('###','cn') - 1
   local requestLines = vim.api.nvim_buf_get_lines(0, (vim.fn.line('.')), requestEndLine, false)
   local inHeader = true
   for _, value in ipairs(requestLines) do
-    if value:match("%S") ~= nil then
-      if value == "{" then
-        curlCmd = curlCmd:sub(1,-3) .. " -D '"
-        inHeader = false
-      end
+    if inHeader and  value:match("%S") == nil then
+      inHeader = false
+    end
+    if not inHeader and value == "{" then
+      curlCmd = curlCmd:sub(1,-2) .. " -d '{"
+    elseif not inHeader and value == "}" then
+      curlCmd = curlCmd .. "}'"
+      break
+    elseif inHeader then
       curlCmd = curlCmd  .. " -H '" .. value .. "'"
-      
-      if value == "}" then
-        curlCmd = curlCmd .. "'"
-        break
-      end
+    else
+      curlCmd = curlCmd .. value
     end
   end
+
   if inHeader and requestLines[1]:match("%S") ~= nil then
     curlCmd = curlCmd:sub(1,-3) .. "'"
   end
+
   vim.fn.jobstart(curlCmd,{
     stdout_buffered = true,
-    on_stdout = function(channID, data, eventName)
-      local curlResult = data[1]:gsub("\r", "")
-      local responseBuf = vim.api.nvim_create_buf(true,false)
-      vim.api.nvim_buf_set_option(responseBuf, "filetype", "json")
-      local lines = {}
-      for line in curlResult:gmatch("([^\n]*)\n?") do
-        table.insert(lines, line)
-      end
-      vim.cmd("vsplit")
-      vim.api.nvim_win_set_buf(0,responseBuf)
-      vim.api.nvim_buf_set_lines(responseBuf, 0, -1, false, lines)
-    end
+    stderr_buffered = true,
+    on_stdout = processJobEvents,
+    on_stderr = processJobEvents
   })
 end, {desc = '[M]ake [R]equest'})
