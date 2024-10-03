@@ -3,11 +3,10 @@ vim.api.nvim_win_set_cursor(0, {line_count, 0})
 local lastVariableLineMatch = vim.fn.search('^@','cnb')
 vim.api.nvim_win_set_cursor(0,{1,0})
 -- Get the current buffer's lines
-local lines = vim.api.nvim_buf_get_lines(0, 0, lastVariableLineMatch, false)
+local linesWithVariables = vim.api.nvim_buf_get_lines(0, 0, lastVariableLineMatch, false)
 local fileVariables = {}
 
--- Iterate through each line and match against the pattern
-for _, line in ipairs(lines) do
+for _, line in ipairs(linesWithVariables) do
   local variableName = line:match("@(.+)=")
   local variableValue = line:match("=(.+)$")
   fileVariables[variableName] = variableValue
@@ -17,12 +16,14 @@ local function processVariable(line)
   assert(type(line) == "string", "the line should be a string")
   for w in line:gmatch("{{(.+)}}") do
     vim.print(w)
-    line = line:gsub("{{"..w.."}}",fileVariables[w])
+    if fileVariables[w] ~= nil then
+      line = line:gsub("{{"..w.."}}",fileVariables[w])
+    end
   end
   return line
 end
 
-local function whenJobEventStdout(channID, data, eventName)
+local function whenJobEventStdout(data)
   local curlResult = data[1]:gsub("\r", "")
   local responseBuf = vim.api.nvim_create_buf(true,false)
   vim.api.nvim_buf_set_option(responseBuf, "filetype", "json")
@@ -35,21 +36,21 @@ local function whenJobEventStdout(channID, data, eventName)
   vim.api.nvim_buf_set_lines(responseBuf, 0, -1, false, lines)
 end
 
-local function whenJobEventStderr(channID, data, eventName)
+local function whenJobEventStderr(data)
   local responseBuf = vim.api.nvim_create_buf(true,false)
   vim.cmd("vsplit")
   vim.api.nvim_win_set_buf(0,responseBuf)
   vim.api.nvim_buf_set_lines(responseBuf, 0, -1, false, data)
 end
 
-local function processJobEvents(channID, data, eventName)
+local function processJobEvents(_, data, eventName)
   if data[1]:match("%S") == nil then
     vim.print("I'm out")
     return
   elseif eventName == "stdout" then
-    whenJobEventStdout(channID, data, eventName)
+    whenJobEventStdout(data)
   elseif eventName == "stderr" then
-    whenJobEventStderr(channID, data, eventName)
+    whenJobEventStderr(data)
   end
 end
 
@@ -70,9 +71,9 @@ vim.keymap.set({'n','v'}, '<leader>mr', function ()
       curlCmd = curlCmd .. "}'"
       break
     elseif inHeader then
-      curlCmd = curlCmd  .. " -H '" .. value .. "'"
+      curlCmd = curlCmd  .. " -H '" .. processVariable(value) .. "'"
     else
-      curlCmd = curlCmd .. value
+      curlCmd = curlCmd .. processVariable(value)
     end
   end
 
