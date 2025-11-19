@@ -1,0 +1,38 @@
+require("codecompanion").setup({
+  strategies = {
+    chat = {
+      name = "cerebras",
+    },
+  },
+  opts = {
+    adapters = {
+      http = {
+        cerebras = function ()
+          return require("codecompanion.adapters").extend("ollama", {
+            env = {
+              url = "https://api.cerebras.ai",
+              api_jey = "csk-dmjyfh8efvjc6cdr39t6vre5exk2pfm2nfed8fmnt236t6rw",
+              chat_url = "/v1/chat/completions",
+            },
+            schema = {
+              model = { default = "llama-3.3-70b" },
+              max_tokens = { default = 1024},
+            },
+          })
+        end,
+      },
+      acp = {
+      },
+    },
+  },
+  extensions = {
+    mcphub = {
+      callback = "mcphub.extensions.codecompanion",
+      opts = {
+        make_vars = true,
+        make_slash_commands = true,
+        show_result_in_chat = true
+      }
+    }
+  },
+})
