@@ -29,7 +29,9 @@ end
 
 require('lspconfig').cds_lsp.setup({
   on_attach=function (client, bufnr)
-    vim.keymap.set('n', 'gd', client.definition(), { buffer = bufnr, desc = '', remap = false })
+    if client.definition then
+      vim.keymap.set('n', 'gd', client.definition(), { buffer = bufnr, desc = '', remap = false })
+    end
   end
 })
 -- Fix Undefined global 'vim'
